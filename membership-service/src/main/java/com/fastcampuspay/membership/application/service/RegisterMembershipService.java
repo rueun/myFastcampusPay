@@ -6,7 +6,7 @@ import com.fastcampuspay.membership.application.port.in.RegisterMembershipComman
 import com.fastcampuspay.membership.application.port.in.RegisterMembershipUseCase;
 import com.fastcampuspay.membership.application.port.out.RegisterMembershipPort;
 import com.fastcampuspay.membership.domain.Membership;
-import common.UseCase;
+import com.fastcampuspay.common.UseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

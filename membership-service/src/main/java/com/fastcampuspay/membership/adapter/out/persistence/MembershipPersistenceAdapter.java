@@ -4,7 +4,7 @@ import com.fastcampuspay.membership.application.port.out.FindMembershipPort;
 import com.fastcampuspay.membership.application.port.out.ModifyMembershipPort;
 import com.fastcampuspay.membership.application.port.out.RegisterMembershipPort;
 import com.fastcampuspay.membership.domain.Membership;
-import common.PersistenceAdapter;
+import com.fastcampuspay.common.PersistenceAdapter;
 import lombok.RequiredArgsConstructor;
 
 @PersistenceAdapter
