@@ -17,7 +17,7 @@ public class RegisterMembershipController {
 
     private final RegisterMembershipUseCase registerMembershipUseCase;
 
-    @PostMapping(path = "/register")
+    @PostMapping(path = "membership/register")
     ResponseEntity<Membership> registerMembership(@RequestBody RegisterMembershipRequest request) {
         RegisterMembershipCommand command = RegisterMembershipCommand.builder()
                 .name(request.getName())
