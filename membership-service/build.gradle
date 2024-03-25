@@ -1,30 +1,12 @@
-buildscript {
-    dependencies {
-        classpath "io.spring.gradle:dependency-management-plugin:0.5.1.RELEASE"
-    }
-}
-
 plugins {
-    id 'org.springframework.boot' version '2.5.2'
-    id 'java'
+    id 'com.palantir.docker' version '0.25.0'
 }
-
-compileJava {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+ext{
+    axonVersion = "4.6.0"
 }
-
-apply plugin: 'java'
-apply plugin: 'java-library'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
 
 group 'com.fastcampuspay.membership'
-version '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
-}
+version '1.0.2'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -34,10 +16,25 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation project(':common')
+
     testImplementation 'junit:junit:4.13.1'
-    runtimeOnly 'com.h2database:h2'
+//    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'mysql:mysql-connector-java'
 }
 
 test {
     useJUnitPlatform()
+}
+
+docker {
+    println "Building Docker image for ${project.name}:${project.version}"
+    println(tasks.bootJar.outputs.files)
+    // 이미지 이름
+    name rootProject.name + '-' + project.name + ':' + version
+    // 도커파일 경로
+    dockerfile file('../Dockerfile')
+    // 빌드할 파일(어떤 파일들을 Dockerfile 에 복사할 것인지)
+    files tasks.bootJar.outputs.files
+    // 도커를 빌드함에 있어서 Dockerfile 에 전달할 인자
+    buildArgs(['JAR_FILE': tasks.bootJar.outputs.files.singleFile.name])
 }
