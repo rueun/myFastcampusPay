@@ -1,4 +1,4 @@
-package com.fastcampuspay.banking;
+package com.fastcampuspay.banking.adapter.in;
 
 import com.fastcampuspay.banking.application.port.in.RegisterBankAccountCommand;
 import com.fastcampuspay.banking.application.port.in.RegisterBankAccountUseCase;
