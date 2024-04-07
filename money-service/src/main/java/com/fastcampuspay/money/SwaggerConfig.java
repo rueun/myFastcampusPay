@@ -19,15 +19,15 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.fastcampuspay.banking"))
+                .apis(RequestHandlerSelectors.basePackage("com.fastcampuspay.money"))
                 .paths(PathSelectors.any())
                 .build();
     }
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("Banking Service")
-                .description("Banking Service API")
+                .title("Money Service")
+                .description("Money Service API")
                 .version("1.0")
                 .build();
     }

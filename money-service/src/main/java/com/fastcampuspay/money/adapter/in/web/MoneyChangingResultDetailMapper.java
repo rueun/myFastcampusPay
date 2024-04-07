@@ -1,4 +1,4 @@
-package com.fastcampuspay.money.adapter.in;
+package com.fastcampuspay.money.adapter.in.web;
 
 import com.fastcampuspay.money.domain.MoneyChangingRequest;
 import org.springframework.stereotype.Component;

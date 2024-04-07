@@ -9,14 +9,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RegisteredBankAccountPersistenceAdapter implements RegisterBankAccountPort {
 
-    private final RegisteredBankAccountRepository registeredBankAccountRepository;
-
+    private final SpringDataRegisteredBankAccountRepository springDataRegisteredBankAccountRepository;
 
     @Override
-
     public RegisteredBankAccountJpaEntity createRegisteredBankAccount(RegisteredBankAccount.MembershipId membershipId, RegisteredBankAccount.BankName bankName, RegisteredBankAccount.BankAccountNumber bankAccountNumber, RegisteredBankAccount.IsValidLinkedStatus isValidLinkedStatus) {
 
-        return registeredBankAccountRepository.save(
+        return springDataRegisteredBankAccountRepository.save(
                 new RegisteredBankAccountJpaEntity(
                         Long.parseLong(membershipId.getValue()),
                         bankName.getValue(),

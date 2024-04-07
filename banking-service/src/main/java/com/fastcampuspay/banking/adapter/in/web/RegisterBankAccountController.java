@@ -1,4 +1,4 @@
-package com.fastcampuspay.banking.adapter.in;
+package com.fastcampuspay.banking.adapter.in.web;
 
 import com.fastcampuspay.banking.application.port.in.RegisterBankAccountCommand;
 import com.fastcampuspay.banking.application.port.in.RegisterBankAccountUseCase;
@@ -18,7 +18,7 @@ public class RegisterBankAccountController {
     private final RegisterBankAccountUseCase registerBankAccountUseCase;
 
     @PostMapping(path = "banking/account/register")
-    ResponseEntity<RegisteredBankAccount> registerMembership(@RequestBody RegisterBankAccountRequest request) {
+    ResponseEntity<RegisteredBankAccount> registerBankAccount(@RequestBody RegisterBankAccountRequest request) {
         RegisterBankAccountCommand command = new RegisterBankAccountCommand(
                 request.getMembershipId(),
                 request.getBankName(),

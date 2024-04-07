@@ -1,6 +1,6 @@
 package com.fastcampuspay.banking;
 
-import com.fastcampuspay.banking.adapter.in.RegisterBankAccountRequest;
+import com.fastcampuspay.banking.adapter.in.web.RegisterBankAccountRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;

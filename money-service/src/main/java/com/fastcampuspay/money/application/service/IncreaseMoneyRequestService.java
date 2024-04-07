@@ -25,26 +25,26 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase 
     public MoneyChangingRequest increaseMoneyRequest(IncreaseMoneyRequestCommand command) {
 
         // 머니의 충전(증액) 과정
-        // 1. 고객 정보 확인
-        // 2. 고객의 연동된 계좌 정보 확인
-        // 3. 법인 계좌 정보 확인
+        // 1. 고객 정보 확인 (멤버)
+        // 2. 고객의 연동된 계좌 정보 확인 -> 고객의 연동된 계좌가 있는지, 고객의 연동된 계좌의 잔액이 충분한지도 확인 (뱅킹)
+        // 3. 법인 계좌 정보 확인 (뱅킹)
         // 4. 증액을 위한 기록. 요청 상태로 MoneyChangingRequest 생성
-        // 5. 펌뱅킹 수행 (고객의 계좌 -> 법인 계좌로 이체)
-
-
+        // 5. 펌뱅킹 수행 (고객의 계좌 -> 법인 계좌로 이체) (뱅킹)
+        // 6. 결과에 따라 MoneyChangingRequest 상태 변경
         MemberMoneyJpaEntity memberMoneyJpaEntity = increaseMoneyPort.increaseMoney(
                 new MemberMoney.MembershipId(command.getTargetMembershipId()),
                 command.getAmount());
 
         // 6-1. 결과가 정상이라면 MoneyChangingRequest 상태를 완료로 변경 후 리턴
         if (memberMoneyJpaEntity != null) {
-            increaseMoneyPort.createMoneyChangingRequest(
-                    new MoneyChangingRequest.TargetMembershipId(command.getTargetMembershipId()),
-                    new MoneyChangingRequest.MoneyChangingType(0),
-                    new MoneyChangingRequest.ChangingMoneyAmount(command.getAmount()),
-                    new MoneyChangingRequest.MoneyChangingStatus(1),
-                    new MoneyChangingRequest.Uuid(UUID.randomUUID())
-
+            return moneyChangingRequestMapper.mapToDomainEntity(
+                    increaseMoneyPort.createMoneyChangingRequest(
+                            new MoneyChangingRequest.TargetMembershipId(command.getTargetMembershipId()),
+                            new MoneyChangingRequest.MoneyChangingType(0),
+                            new MoneyChangingRequest.ChangingMoneyAmount(command.getAmount()),
+                            new MoneyChangingRequest.MoneyChangingStatus(1),
+                            new MoneyChangingRequest.Uuid(UUID.randomUUID())
+                    )
             );
         }
 

@@ -1,4 +1,4 @@
-package com.fastcampuspay.money.adapter.in;
+package com.fastcampuspay.money.adapter.in.web;
 
 import com.fastcampuspay.common.WebAdapter;
 import com.fastcampuspay.money.application.port.in.IncreaseMoneyRequestCommand;

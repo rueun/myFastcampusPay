@@ -1,4 +1,4 @@
-package com.fastcampuspay.banking.adapter.in;
+package com.fastcampuspay.banking.adapter.in.web;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
