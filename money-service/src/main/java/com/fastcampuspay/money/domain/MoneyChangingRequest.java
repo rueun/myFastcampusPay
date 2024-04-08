@@ -88,8 +88,8 @@ public class MoneyChangingRequest {
     @Value
     public static class Uuid {
 
-        public Uuid(UUID uuid) {
-            this.uuid = uuid.toString();
+        public Uuid(String uuid) {
+            this.uuid = uuid;
         }
 
         String uuid;

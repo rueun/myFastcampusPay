@@ -1,0 +1,6 @@
+#logging:
+#  topic: 123
+#
+#kafka:
+#  clusters:
+#    bootstrap-servers: 123

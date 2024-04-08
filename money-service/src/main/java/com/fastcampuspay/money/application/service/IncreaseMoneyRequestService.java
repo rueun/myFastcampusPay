@@ -1,16 +1,23 @@
 package com.fastcampuspay.money.application.service;
 
+import com.fastcampuspay.common.CountDownLatchManager;
+import com.fastcampuspay.common.RechargingMoneyTask;
+import com.fastcampuspay.common.SubTask;
 import com.fastcampuspay.common.UseCase;
 import com.fastcampuspay.money.adapter.out.persistence.MemberMoneyJpaEntity;
 import com.fastcampuspay.money.adapter.out.persistence.MoneyChangingRequestMapper;
 import com.fastcampuspay.money.application.port.in.IncreaseMoneyRequestCommand;
 import com.fastcampuspay.money.application.port.in.IncreaseMoneyRequestUseCase;
+import com.fastcampuspay.money.application.port.out.GetMembershipPort;
 import com.fastcampuspay.money.application.port.out.IncreaseMoneyPort;
+import com.fastcampuspay.money.application.port.out.MembershipStatus;
+import com.fastcampuspay.money.application.port.out.SendRechargingMoneyTaskPort;
 import com.fastcampuspay.money.domain.MemberMoney;
 import com.fastcampuspay.money.domain.MoneyChangingRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @UseCase
@@ -18,6 +25,10 @@ import java.util.UUID;
 @Transactional
 public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase {
 
+    private final CountDownLatchManager countDownLatchManager;
+
+    private final SendRechargingMoneyTaskPort sendRechargingMoneyTaskPort;
+    private final GetMembershipPort getMembershipPort;
     private final IncreaseMoneyPort increaseMoneyPort;
     private final MoneyChangingRequestMapper moneyChangingRequestMapper;
 
@@ -26,6 +37,10 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase 
 
         // 머니의 충전(증액) 과정
         // 1. 고객 정보 확인 (멤버)
+        MembershipStatus membership = getMembershipPort.getMembership(command.getTargetMembershipId());
+        if (!membership.isValid()) {
+            return null;
+        }
         // 2. 고객의 연동된 계좌 정보 확인 -> 고객의 연동된 계좌가 있는지, 고객의 연동된 계좌의 잔액이 충분한지도 확인 (뱅킹)
         // 3. 법인 계좌 정보 확인 (뱅킹)
         // 4. 증액을 위한 기록. 요청 상태로 MoneyChangingRequest 생성
@@ -43,12 +58,80 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase 
                             new MoneyChangingRequest.MoneyChangingType(0),
                             new MoneyChangingRequest.ChangingMoneyAmount(command.getAmount()),
                             new MoneyChangingRequest.MoneyChangingStatus(1),
-                            new MoneyChangingRequest.Uuid(UUID.randomUUID())
+                            new MoneyChangingRequest.Uuid(UUID.randomUUID().toString())
                     )
             );
         }
 
         // 6-2. 결과가 비정상이라면 MoneyChangingRequest 상태를 실패로 변경 후 리턴
         return null;
+    }
+
+    @Override
+    public MoneyChangingRequest increaseMoneyRequestAsync(IncreaseMoneyRequestCommand command) {
+        // 비동기로 처리하는 경우
+        // 1. SubTask, Task 생성
+        SubTask validMemberTask = SubTask.builder()
+                .subTaskName("validMemberTask : 멤버쉽 유효성 검사")
+                .membershipID(command.getTargetMembershipId())
+                .taskType("membership")
+                .status("ready")
+                .build();
+
+        // banking subTask
+        // banking account validation
+        SubTask validBankingAccountTask = SubTask.builder()
+                .subTaskName("validBankingTask : 은행 계좌 유효성 검사")
+                .membershipID(command.getTargetMembershipId())
+                .taskType("banking")
+                .status("ready")
+                .build();
+        // amount money firmbanking -> 무조건 ok 받았다고 가정(생략하나, 실제로는 필요함)
+
+        List<SubTask> subTasks = List.of(validMemberTask, validBankingAccountTask);
+        RechargingMoneyTask task = RechargingMoneyTask.builder()
+                .taskID(UUID.randomUUID().toString())
+                .taskName("RechargingMoneyTask / 머니 충전 태스크")
+                .subTaskList(subTasks)
+                .moneyAmount(command.getAmount())
+                .membershipID(command.getTargetMembershipId())
+                .toBankName("fastcampus")
+                .build();
+
+        // 2. Kafka Cluster Producer로 Task 전달
+        // task produce
+        sendRechargingMoneyTaskPort.sendRechargingMoneyTask(task);
+        countDownLatchManager.addCountDownLatch(task.getTaskID());
+
+        // 3. Wait
+        try {
+            countDownLatchManager.getCountDownLatchForKey(task.getTaskID()).await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // 3-1. task-consumer
+        // task consumer가 수행하는 동안 countDownLatch 를 통해서 스레드를 대기시킨다.
+        // 등록된 subTask, status 모두 ok -> task 결과를 produce
+
+        // 4. Task 결과를 Consume
+        // 받은 countDownLatchManager를 통해서 결과 데이터를 받아야 한다.
+        String result = countDownLatchManager.getDataForKey(task.getTaskID());
+        if (result.equals("success")) {
+            // 4-1. Consume OK, Logic 수행
+            return moneyChangingRequestMapper.mapToDomainEntity(
+                    increaseMoneyPort.createMoneyChangingRequest(
+                            new MoneyChangingRequest.TargetMembershipId(command.getTargetMembershipId()),
+                            new MoneyChangingRequest.MoneyChangingType(0),
+                            new MoneyChangingRequest.ChangingMoneyAmount(command.getAmount()),
+                            new MoneyChangingRequest.MoneyChangingStatus(1),
+                            new MoneyChangingRequest.Uuid(UUID.randomUUID().toString())
+                    )
+            );
+
+        } else {
+            // 4-2. Consume Fail, Logic 수행
+            return null;
+        }
     }
 }

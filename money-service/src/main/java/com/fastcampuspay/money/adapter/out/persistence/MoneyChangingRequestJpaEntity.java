@@ -26,9 +26,9 @@ public class MoneyChangingRequestJpaEntity {
     private int changingMoneyStatus; // 0: 요청, 1: 성공, 2: 실패
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
-    private UUID uuid;
+    private String uuid;
 
-    public MoneyChangingRequestJpaEntity(String targetMembershipId, int moneyChangingType, int moneyAmount, int changingMoneyStatus, Timestamp timestamp, UUID uuid) {
+    public MoneyChangingRequestJpaEntity(String targetMembershipId, int moneyChangingType, int moneyAmount, int changingMoneyStatus, Timestamp timestamp, String uuid) {
         this.targetMembershipId = targetMembershipId;
         this.moneyChangingType = moneyChangingType;
         this.moneyAmount = moneyAmount;
