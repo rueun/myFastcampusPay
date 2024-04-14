@@ -1,18 +1,20 @@
 package com.fastcampuspay.money.adapter.out.persistence;
 
 import com.fastcampuspay.common.PersistenceAdapter;
+import com.fastcampuspay.money.application.port.in.CreateMemberMoneyPort;
+import com.fastcampuspay.money.application.port.in.GetMemberMoneyPort;
 import com.fastcampuspay.money.application.port.out.IncreaseMoneyPort;
 import com.fastcampuspay.money.domain.MemberMoney;
 import com.fastcampuspay.money.domain.MoneyChangingRequest;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
-public class MoneyChangingPersistenceAdapter implements IncreaseMoneyPort {
+public class MoneyChangingPersistenceAdapter implements IncreaseMoneyPort, CreateMemberMoneyPort, GetMemberMoneyPort {
 
     private final SpringDataMoneyChangingRequestRepository moneyChangingRequestRepository;
     private final SpringDataMemberMoneyRepository memberMoneyRepository;
@@ -30,16 +32,46 @@ public class MoneyChangingPersistenceAdapter implements IncreaseMoneyPort {
     }
 
     @Override
-    public MemberMoneyJpaEntity increaseMoney(MemberMoney.MembershipId membershipId, int increaseMoneyAmount) {
-        Optional<MemberMoneyJpaEntity> memberMoneyOp = memberMoneyRepository.findByMembershipId(membershipId.getMembershipId());
-        MemberMoneyJpaEntity memberMoney;
+    public MemberMoneyJpaEntity increaseMoney(MemberMoney.MembershipId memberId, int increaseMoneyAmount) {
+        MemberMoneyJpaEntity entity;
+        try {
+            List<MemberMoneyJpaEntity> entityList = memberMoneyRepository.findByMembershipId(Long.parseLong(memberId.getMembershipId()));
+            entity = entityList.get(0);
 
-        if (memberMoneyOp.isPresent()) {
-            memberMoney = memberMoneyOp.get();
-            memberMoney.setBalance(memberMoney.getBalance() + increaseMoneyAmount);
-        } else {
-            memberMoney = new MemberMoneyJpaEntity(membershipId.getMembershipId(), increaseMoneyAmount);
+            entity.setBalance(entity.getBalance() + increaseMoneyAmount);
+            return memberMoneyRepository.save(entity);
+        } catch (Exception e) {
+            entity = new MemberMoneyJpaEntity(
+                    Long.parseLong(memberId.getMembershipId()),
+                    increaseMoneyAmount, ""
+            );
+            entity = memberMoneyRepository.save(entity);
+            return entity;
         }
-        return memberMoneyRepository.save(memberMoney);
+    }
+
+    @Override
+    public void createMemberMoney(MemberMoney.MembershipId memberId, MemberMoney.MoneyAggregateIdentifier aggregateIdentifier) {
+        MemberMoneyJpaEntity entity = new MemberMoneyJpaEntity(
+                Long.parseLong(memberId.getMembershipId()),
+                0,
+                aggregateIdentifier.getAggregateIdentifier()
+        );
+        memberMoneyRepository.save(entity);
+    }
+
+    @Override
+    public MemberMoneyJpaEntity getMemberMoney(MemberMoney.MembershipId memberId) {
+        MemberMoneyJpaEntity entity;
+        List<MemberMoneyJpaEntity> entityList = memberMoneyRepository.findByMembershipId(Long.parseLong(memberId.getMembershipId()));
+        if (entityList.size() == 0) {
+            entity = new MemberMoneyJpaEntity(
+                    Long.parseLong(memberId.getMembershipId()),
+                    0, ""
+            );
+            entity = memberMoneyRepository.save(entity);
+            return entity;
+        }
+        return entityList.get(0);
     }
 }
