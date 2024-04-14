@@ -13,16 +13,15 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
 
     private final SpringDataFirmbankingRequestRepository firmbankingRequestRepository;
 
-
     @Override
-    public FirmbankingRequestJpaEntity createFirmbankingRequest(FirmbankingRequest.FromBankName fromBankName, FirmbankingRequest.FromBankAccountNumber fromBankAccountNumber, FirmbankingRequest.ToBankName toBankName, FirmbankingRequest.ToBankAccountNumber toBankAccountNumber, FirmbankingRequest.MoneyAmount moneyAmount, FirmbankingRequest.FirmbankingStatus firmbankingStatus) {
+    public FirmbankingRequestJpaEntity createFirmbankingRequest(FirmbankingRequest.FromBankName fromBankName, FirmbankingRequest.FromBankAccountNumber fromBankAccountNumber, FirmbankingRequest.ToBankName toBankName, FirmbankingRequest.ToBankAccountNumber toBankAccountNumber, FirmbankingRequest.MoneyAmount moneyAmount, FirmbankingRequest.FirmbankingStatus firmbankingStatus, FirmbankingRequest.FirmbankingAggregateIdentifier firmbankingAggregateIdentifier) {
         return firmbankingRequestRepository.save(new FirmbankingRequestJpaEntity(
                         fromBankName.getFromBankName(),
                         fromBankAccountNumber.getFromBankAccountNumber(),
                         toBankName.getToBankName(),
                         toBankAccountNumber.getToBankAccountNumber(),
                         moneyAmount.getMoneyAmount(), firmbankingStatus.getFirmBankingStatus(),
-                        UUID.randomUUID()
+                        UUID.randomUUID(), firmbankingAggregateIdentifier.getAggregateIdentifier()
                 )
         );
     }
@@ -30,5 +29,10 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
     @Override
     public FirmbankingRequestJpaEntity modifyFirmbankingRequest(FirmbankingRequestJpaEntity entity) {
         return firmbankingRequestRepository.save(entity);
+    }
+
+    @Override
+    public FirmbankingRequestJpaEntity getFirmbankingRequest(FirmbankingRequest.FirmbankingAggregateIdentifier firmbankingAggregateIdentifier) {
+        return null;
     }
 }

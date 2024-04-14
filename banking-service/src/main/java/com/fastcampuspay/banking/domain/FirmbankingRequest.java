@@ -102,4 +102,12 @@ public class FirmbankingRequest {
         }
         int firmBankingStatus;
     }
+
+    @Value
+    public static class FirmbankingAggregateIdentifier {
+        public FirmbankingAggregateIdentifier(String aggregateIdentifier) {
+            this.aggregateIdentifier = aggregateIdentifier;
+        }
+        String aggregateIdentifier;
+    }
 }
