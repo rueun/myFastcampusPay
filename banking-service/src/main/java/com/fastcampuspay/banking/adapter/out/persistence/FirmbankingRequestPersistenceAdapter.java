@@ -5,6 +5,7 @@ import com.fastcampuspay.banking.domain.FirmbankingRequest;
 import com.fastcampuspay.common.PersistenceAdapter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @PersistenceAdapter
@@ -33,6 +34,10 @@ public class FirmbankingRequestPersistenceAdapter implements RequestFirmbankingP
 
     @Override
     public FirmbankingRequestJpaEntity getFirmbankingRequest(FirmbankingRequest.FirmbankingAggregateIdentifier firmbankingAggregateIdentifier) {
+        List<FirmbankingRequestJpaEntity> entityList = firmbankingRequestRepository.findByAggregateIdentifier(firmbankingAggregateIdentifier.getAggregateIdentifier());
+        if (entityList.size() >= 1) {
+            return entityList.get(0);
+        }
         return null;
     }
 }
