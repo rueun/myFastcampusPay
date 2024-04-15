@@ -3,10 +3,16 @@ package com.fastcampuspay.money.adapter.axon.saga;
 import com.fastcampuspay.common.command.CheckRegisteredBankAccountCommand;
 import com.fastcampuspay.common.command.RequestFirmbankingCommand;
 import com.fastcampuspay.common.event.CheckedRegisteredBankAccountEvent;
+import com.fastcampuspay.common.event.RequestFirmbankingFinishedEvent;
+import com.fastcampuspay.common.event.RollbackFirmbankingFinishedEvent;
 import com.fastcampuspay.money.adapter.axon.event.RechargingRequestCreatedEvent;
+import com.fastcampuspay.money.adapter.out.persistence.MemberMoneyJpaEntity;
+import com.fastcampuspay.money.application.port.out.IncreaseMoneyPort;
+import com.fastcampuspay.money.domain.MemberMoney;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
@@ -28,37 +34,43 @@ public class MoneyRechargeSaga {
     }
 
     @StartSaga
-    @SagaEventHandler(associationProperty = "rechargingRequestId") // rechargingRequestId 는 saga 를 구분하는 속성 값이다.
-    public void handle(RechargingRequestCreatedEvent event) { // 충전이라는 동작을 시작하게 되는 이벤트(충전 동작을 시작하게 하는 주체는 머니 서비스이다.)
+    @SagaEventHandler(associationProperty = "rechargingRequestId")
+    public void handle(RechargingRequestCreatedEvent event){
         System.out.println("RechargingRequestCreatedEvent Start saga");
-        // "충전 요청" 이 시작되었다.
-        String checkRegisteredBankAccountId = UUID.randomUUID().toString();
-        SagaLifecycle.associateWith("checkRegisteredBankAccountId ", checkRegisteredBankAccountId);
 
-        // 뱅킹의 계좌 등록 여부를 확인한다.(RegisteredBankAccountAggregate)
+        String checkRegisteredBankAccountId = UUID.randomUUID().toString();
+        SagaLifecycle.associateWith("checkRegisteredBankAccountId", checkRegisteredBankAccountId);
+
+        // "충전 요청" 이 시작 되었다.
+
+        // 뱅킹의 계좌 등록 여부 확인하기. (RegisteredBankAccount)
         // CheckRegisteredBankAccountCommand -> Check Bank Account
         // -> axon server -> Banking Service -> Common
-        commandGateway.send(new CheckRegisteredBankAccountCommand(
-                event.getRegisteredBankAccountAggregateIdentifier(),
-                event.getRechargingRequestId(),
-                event.getMembershipId(),
-                checkRegisteredBankAccountId,
-                event.getBankName(),
-                event.getBankAccountNumber(),
-                event.getAmount())
-        ).whenComplete((result, throwable) -> {
-            if (throwable != null) {
-                throwable.printStackTrace();
-                System.out.println("CheckRegisteredBankAccountCommand failed");
-            } else {
-                System.out.println("CheckRegisteredBankAccountCommand sent");
-            }
-        });
 
+        // 기본적으로 axon framework 에서, 모든 aggregate 의 변경은 aggregate 단위로 되어야만 한다.
         // 기본적으로 axon framework 는 command 를 보낸 후에, command 가 처리되었을 때, event 가 발생하면, 그 event 를 통해 saga 를 진행시킨다.
-        // 기본적으로 axon framework 에서 모든 aggregate 의 변경은 aggregate 단위로 이루어진다.
+        commandGateway.send(new CheckRegisteredBankAccountCommand(
+                        event.getRegisteredBankAccountAggregateIdentifier(),
+                        event.getRechargingRequestId(),
+                        event.getMembershipId(),
+                        checkRegisteredBankAccountId,
+                        event.getBankName(),
+                        event.getBankAccountNumber(),
+                        event.getAmount()
+                )
+        ).whenComplete(
+                (result, throwable) -> {
+                    if (throwable != null) {
+                        throwable.printStackTrace();
+                        System.out.println("CheckRegisteredBankAccountCommand Command failed");
+                    } else {
+                        System.out.println("CheckRegisteredBankAccountCommand Command success");
+                    }
+                }
+        );
 
     }
+
 
     @SagaEventHandler(associationProperty = "checkRegisteredBankAccountId")
     public void handle(CheckedRegisteredBankAccountEvent event) {
@@ -97,5 +109,55 @@ public class MoneyRechargeSaga {
         );
     }
 
+    @SagaEventHandler(associationProperty = "requestFirmbankingId")
+    public void handle(RequestFirmbankingFinishedEvent event, IncreaseMoneyPort increaseMoneyPort) {
+        System.out.println("RequestFirmbankingFinishedEvent saga: " + event.toString());
+        boolean status = event.getStatus() == 0; // 0: 성공, 1: 실패
+        if (status) {
+            System.out.println("RequestFirmbankingFinishedEvent event success");
+        } else {
+            System.out.println("RequestFirmbankingFinishedEvent event Failed");
+        }
+
+        // DB Update 명령.
+        MemberMoneyJpaEntity resultEntity =
+                increaseMoneyPort.increaseMoney(
+                        new MemberMoney.MembershipId(event.getMembershipId()), event.getMoneyAmount()
+                );
+
+        if (resultEntity == null) {
+            // 실패 시, 롤백 이벤트 발생.
+            String rollbackFirmbankingId = UUID.randomUUID().toString();
+            SagaLifecycle.associateWith("rollbackFirmbankingId", rollbackFirmbankingId);
+            commandGateway.send(new com.fastcampuspay.common.command.RollbackFirmbankingRequestCommand(
+                    rollbackFirmbankingId,
+                    event.getRequestFirmbankingAggregateIdentifier(),
+                    event.getRechargingRequestId(),
+                    event.getMembershipId(),
+                    event.getToBankName(),
+                    event.getToBankAccountNumber(),
+                    event.getMoneyAmount()
+            )).whenComplete(
+                    (result, throwable) -> {
+                        if (throwable != null) {
+                            throwable.printStackTrace();
+                            System.out.println("RollbackFirmbankingRequestCommand Command failed");
+                        } else {
+                            System.out.println("Saga success : "+ result.toString());
+                            SagaLifecycle.end();
+                        }
+                    }
+            );
+        } else {
+            // 성공 시, saga 종료.
+            SagaLifecycle.end();
+        }
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "rollbackFirmbankingId")
+    public void handle(RollbackFirmbankingFinishedEvent event) {
+        System.out.println("RollbackFirmbankingFinishedEvent saga: " + event.toString());
+    }
 
 }

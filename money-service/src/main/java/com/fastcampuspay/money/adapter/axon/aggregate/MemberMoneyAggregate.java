@@ -14,10 +14,10 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.spring.stereotype.Aggregate;
 
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
-
 
 @Aggregate()
 @Data
@@ -32,14 +32,17 @@ public class MemberMoneyAggregate {
     @CommandHandler
     public MemberMoneyAggregate(MemberMoneyCreatedCommand command) {
         System.out.println("MemberMoneyCreatedCommand Handler");
+
         apply(new MemberMoneyCreatedEvent(command.getMembershipId()));
     }
 
     @CommandHandler
-    public String handle(IncreaseMemberMoneyCommand command) {
+    public String handle(@NotNull IncreaseMemberMoneyCommand command){
         System.out.println("IncreaseMemberMoneyCommand Handler");
         id = command.getAggregateIdentifier();
-        apply(new IncreaseMemberMoneyEvent(id, command.getMembershipId(), command.getAmount() ));
+
+        // store event
+        apply(new IncreaseMemberMoneyEvent(id, command.getMembershipId(), command.getAmount()));
         return id;
     }
 
@@ -47,6 +50,7 @@ public class MemberMoneyAggregate {
     public void handler(RechargingMoneyRequestCreateCommand command, GetRegisteredBankAccountPort getRegisteredBankAccountPort){
         System.out.println("RechargingMoneyRequestCreateCommand Handler");
         id = command.getAggregateIdentifier();
+
 
         // new RechargingRequestCreatedEvent
         // banking 정보가 필요해요. -> bank svc (get RegisteredBankAccount) 를 위한. Port.
@@ -77,7 +81,7 @@ public class MemberMoneyAggregate {
         System.out.println("IncreaseMemberMoneyEvent Sourcing Handler");
         id = event.getAggregateIdentifier();
         membershipId = Long.parseLong(event.getMembershipId());
-        balance += event.getAmount();
+        balance = event.getAmount();
     }
 
     public MemberMoneyAggregate() {
