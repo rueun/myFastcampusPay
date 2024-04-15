@@ -71,6 +71,7 @@ services:
       - KAFKA_CLUSTERS_BOOTSTRAPSERVERS=kafka:29092
       - LOGGING_TOPIC=fastcampus.logging.out.stdout
       - SERVICE_MEMBERSHIP_URL=http://membership-service:8080
+      - SERVICE_BANKING_URL=http://banking-service:8080
 
   money-service:
     image: fastcampus-pay-money-service:1.0.0
@@ -91,6 +92,7 @@ services:
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
       - SERVICE_MEMBERSHIP_URL=http://membership-service:8080
+      - SERVICE_BANKING_URL=http://banking-service:8080
       - KAFKA_CLUSTERS_BOOTSTRAP-SERVERS=kafka:29092
       - LOGGING_TOPIC=fastcampus.logging.out.stdout
       - TASK_TOPIC=fastcampus.task.topic
