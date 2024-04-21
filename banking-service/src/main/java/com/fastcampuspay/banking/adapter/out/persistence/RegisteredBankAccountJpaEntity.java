@@ -20,16 +20,18 @@ public class RegisteredBankAccountJpaEntity {
     @GeneratedValue
     private Long registeredBankAccountId;
 
-    private Long membershipId;
+    private String membershipId;
     private String bankName;
     private String bankAccountNumber;
     private boolean isValidLinkedStatus;
+    private String aggregateIdentifier;
 
-    public RegisteredBankAccountJpaEntity(Long membershipId, String bankName, String bankAccountNumber, boolean isValidLinkedStatus) {
+    public RegisteredBankAccountJpaEntity(String membershipId, String bankName, String bankAccountNumber, boolean isValidLinkedStatus, String aggregateIdentifier) {
         this.membershipId = membershipId;
         this.bankName = bankName;
         this.bankAccountNumber = bankAccountNumber;
         this.isValidLinkedStatus = isValidLinkedStatus;
+        this.aggregateIdentifier = aggregateIdentifier;
     }
 
     @Override
@@ -40,6 +42,7 @@ public class RegisteredBankAccountJpaEntity {
                 ", bankName='" + bankName + '\'' +
                 ", bankAccountNumber='" + bankAccountNumber + '\'' +
                 ", isValidLinkedStatus=" + isValidLinkedStatus +
+                ", aggregateIdentifier='" + aggregateIdentifier + '\'' +
                 '}';
     }
 }

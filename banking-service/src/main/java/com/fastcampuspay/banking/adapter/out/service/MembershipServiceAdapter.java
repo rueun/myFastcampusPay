@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MemberServiceAdapter implements GetMembershipPort {
+public class MembershipServiceAdapter implements GetMembershipPort {
 
     private final CommonHttpClient commonHttpClient;
     private final String memberServiceUrl;
 
-    public MemberServiceAdapter(CommonHttpClient commonHttpClient,
-                                @Value("${service.membership.url}") String memberServiceUrl) {
+    public MembershipServiceAdapter(CommonHttpClient commonHttpClient,
+                                    @Value("${service.membership.url}") String memberServiceUrl) {
         this.commonHttpClient = commonHttpClient;
         this.memberServiceUrl = memberServiceUrl;
     }
