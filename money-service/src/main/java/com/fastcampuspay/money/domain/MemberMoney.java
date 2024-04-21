@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Value;
 
-import java.util.Date;
-
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MemberMoney {
 
@@ -18,10 +16,10 @@ public class MemberMoney {
 
     // @Getter private final String linkedBankAccount;
 
-    public static MemberMoney generateMoneyChangingRequest(
+    public static MemberMoney generateMemberMoney(
             MemberMoneyId moneyChangingRequestId,
             MembershipId membershipId,
-            Balance balance
+            MoneyBalance balance
     ) {
         return new MemberMoney(
                 moneyChangingRequestId.getMemberMoneyId(),
@@ -51,9 +49,9 @@ public class MemberMoney {
     }
 
     @Value
-    public static class Balance {
+    public static class MoneyBalance {
 
-        public Balance(int balance) {
+        public MoneyBalance(int balance) {
             this.balance = balance;
         }
 
