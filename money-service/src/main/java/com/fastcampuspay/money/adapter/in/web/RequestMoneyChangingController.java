@@ -63,6 +63,16 @@ public class RequestMoneyChangingController {
         return ResponseEntity.ok(registeredBankAccount);
     }*/
 
+    @PostMapping(path = "/money/decrease-eda")
+    void decreaseMoneyChangingRequestByEvent(@RequestBody IncreaseMoneyChangingRequest request) {
+        IncreaseMoneyRequestCommand command = IncreaseMoneyRequestCommand.builder()
+                .targetMembershipId(request.getTargetMembershipId())
+                .amount(request.getAmount() * -1)
+                .build();
+
+        increaseMoneyRequestUseCase.increaseMoneyRequestByEvent(command);
+    }
+
 
     @PostMapping(path = "money/create-member-money")
     void createMemberMoney(@RequestBody CreateMemberMoneyRequest request) {
