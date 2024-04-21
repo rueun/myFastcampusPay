@@ -4,15 +4,12 @@ import com.fastcampuspay.common.CountDownLatchManager;
 import com.fastcampuspay.common.RechargingMoneyTask;
 import com.fastcampuspay.common.SubTask;
 import com.fastcampuspay.common.UseCase;
-import com.fastcampuspay.money.adapter.axon.command.IncreaseMemberMoneyCommand;
 import com.fastcampuspay.money.adapter.axon.command.MemberMoneyCreatedCommand;
+import com.fastcampuspay.money.adapter.axon.command.RechargingMoneyRequestCreateCommand;
 import com.fastcampuspay.money.adapter.out.persistence.MemberMoneyJpaEntity;
 import com.fastcampuspay.money.adapter.out.persistence.MoneyChangingRequestMapper;
 import com.fastcampuspay.money.application.port.in.*;
-import com.fastcampuspay.money.application.port.out.GetMembershipPort;
-import com.fastcampuspay.money.application.port.out.IncreaseMoneyPort;
-import com.fastcampuspay.money.application.port.out.MembershipStatus;
-import com.fastcampuspay.money.application.port.out.SendRechargingMoneyTaskPort;
+import com.fastcampuspay.money.application.port.out.*;
 import com.fastcampuspay.money.domain.MemberMoney;
 import com.fastcampuspay.money.domain.MoneyChangingRequest;
 import lombok.RequiredArgsConstructor;
@@ -150,10 +147,28 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase,
 
     @Override
     public void increaseMoneyRequestByEvent(IncreaseMoneyRequestCommand command) {
-        final MemberMoneyJpaEntity memberMoney = getMemberMoneyPort.getMemberMoney(new MemberMoney.MembershipId(command.getTargetMembershipId()));
+        MemberMoneyJpaEntity memberMoneyJpaEntity = getMemberMoneyPort.getMemberMoney(new MemberMoney.MembershipId(command.getTargetMembershipId()));
+        String memberMoneyAggregateIdentifier = memberMoneyJpaEntity.getAggregateIdentifier();
+
+        // Saga 의 시작을 나타내는 커맨드!
+        // RechargingMoneyRequestCreateCommand
+        commandGateway.send(new RechargingMoneyRequestCreateCommand(memberMoneyAggregateIdentifier,
+                UUID.randomUUID().toString(),
+                command.getTargetMembershipId(),
+                command.getAmount())
+        ).whenComplete(
+                (result, throwable) -> {
+                    if (throwable != null) {
+                        throwable.printStackTrace();
+                        throw new RuntimeException(throwable);
+                    } else {
+                        System.out.println("result = " + result); // aggregateIdentifier
+                    }
+                }
+        );
 
         // 이벤트 소싱
-        commandGateway.send(IncreaseMemberMoneyCommand.builder()
+/*        commandGateway.send(IncreaseMemberMoneyCommand.builder()
                         .membershipId(command.getTargetMembershipId())
                         .amount(command.getAmount())
                         .aggregateIdentifier(memberMoney.getAggregateIdentifier())
@@ -170,7 +185,7 @@ public class IncreaseMoneyRequestService implements IncreaseMoneyRequestUseCase,
                                 new MemberMoney.MembershipId(command.getTargetMembershipId())
                                 , command.getAmount());
                     }
-                });
+                });*/
     }
 
     @Override

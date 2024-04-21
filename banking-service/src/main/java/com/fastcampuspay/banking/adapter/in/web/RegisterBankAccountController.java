@@ -27,10 +27,18 @@ public class RegisterBankAccountController {
         );
 
         RegisteredBankAccount registeredBankAccount = registerBankAccountUseCase.registerBankAccount(command);
-        if (registeredBankAccount == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
         return ResponseEntity.ok(registeredBankAccount);
+    }
+
+    @PostMapping(path = "banking/account/register-eda")
+    void registerBankAccountByEvent(@RequestBody RegisterBankAccountRequest request) {
+        RegisterBankAccountCommand command = new RegisterBankAccountCommand(
+                request.getMembershipId(),
+                request.getBankName(),
+                request.getBankAccountNumber(),
+                request.isValidLinkedStatus()
+        );
+
+        registerBankAccountUseCase.registerBankAccountByEvent(command);
     }
 }
