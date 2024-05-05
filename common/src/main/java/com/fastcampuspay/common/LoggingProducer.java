@@ -12,7 +12,7 @@ public class LoggingProducer {
     // 하나의 카프카 프로듀서를 가지고 있음
     private final KafkaProducer<String, String> producer;
     private final String topic;
-    public LoggingProducer(@Value("${kafka.clusters.bootstrapservers}") String bootstrapServers,
+    public LoggingProducer(@Value("${kafka.clusters.bootstrap-servers}") String bootstrapServers,
                            @Value("${logging.topic}")String topic) {
 
         // Producer Initialization ';'

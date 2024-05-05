@@ -79,7 +79,7 @@ public class DummyMoneyDataSimulator {
             jsonRequestBody.put("bankAccountNumber", generateRandomAccountNumber());
             jsonRequestBody.put("bankName", BANK_NAME[random.nextInt(BANK_NAME.length)]);
             jsonRequestBody.put("membershipId", targetMembershipId);
-            jsonRequestBody.put("validLinkedStatus", true);
+            jsonRequestBody.put("isValidLinkedStatus", true);
 
             call(apiEndpoint, conn, jsonRequestBody);
         } catch (IOException e) {

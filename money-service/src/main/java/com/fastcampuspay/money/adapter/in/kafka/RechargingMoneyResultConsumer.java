@@ -25,7 +25,7 @@ public class RechargingMoneyResultConsumer {
     private final LoggingProducer loggingProducer;
     @NotNull
     private final CountDownLatchManager countDownLatchManager;
-    public RechargingMoneyResultConsumer(@Value("${kafka.clusters.bootstrapservers}") String bootstrapServers,
+    public RechargingMoneyResultConsumer(@Value("${kafka.clusters.bootstrap-servers}") String bootstrapServers,
                                          @Value("${task.result.topic}")String topic, LoggingProducer loggingProducer, CountDownLatchManager countDownLatchManager) {
         this.loggingProducer = loggingProducer;
         this.countDownLatchManager = countDownLatchManager;
