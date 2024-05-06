@@ -10,6 +10,7 @@ public interface ModifyMembershipPort {
             Membership.MembershipEmail email,
             Membership.MembershipAddress address,
             Membership.MembershipIsValid isValid,
-            Membership.MembershipIsCorp isCorp
+            Membership.MembershipIsCorp isCorp,
+            Membership.MembershipRefreshToken refreshToken
     );
 }
