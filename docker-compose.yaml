@@ -246,6 +246,17 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAP-SERVERS=kafka:29092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
 
+  vault:
+    image: vault:1.13.1
+    networks:
+      - fastcampuspay_network
+    container_name: vault
+    ports:
+      - "8200:8200"
+    restart: always
+    cap_add:
+      - IPC_LOCK
+
 
   logging-consumer:
     image: fastcampus-pay-logging-consumer:1.0.0

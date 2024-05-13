@@ -12,3 +12,11 @@
 #    hibernate:
 #      ddl-auto: create-drop
 #    open-in-view: false
+
+spring:
+  cloud:
+    vault:
+      token: hvs.CAESIEm1sC5qskIXxr7vfDHRXlHSG4u9iPaB_qAQDBP-mlOHGh4KHGh2cy52bzVTQ3hrMkFTYjF5TnR3dDVqZlVKVjU
+      scheme: http
+      host: localhost
+      port: 8200
