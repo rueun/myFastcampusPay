@@ -13,10 +13,10 @@
 #      ddl-auto: create-drop
 #    open-in-view: false
 
-spring:
-  cloud:
-    vault:
-      token:
-      scheme: http
-      host: localhost
-      port: 8200
+#spring:
+#  cloud:
+#    vault:
+#      token:
+#      scheme: http
+#      host: localhost
+#      port: 8200
